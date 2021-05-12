@@ -28,6 +28,9 @@ var (
 	portalStatus = make(map[string]PortalStatus)
 	rw sync.Mutex
 
+	// nrAppname = "travels-control"
+	nrLicenseKey = ""
+
 	errorCoordinates = []float64{-25.702539, 37.747909}
 )
 
@@ -59,6 +62,16 @@ func setup() {
 		webroot = wr
 		glog.Infof("WEBROOT=%s", webroot)
 	}
+
+	nrlk := os.Getenv("NR_LICENSE_KEY")
+	if nrlk != "" {
+		nrLicenseKey = nrlk
+		glog.Infof("New Relic License Key was provided: [%s]", nrLicenseKey)
+	} else {
+		glog.Errorf("NR_LICENSE_KEY is empty !! Travel Control won't start")
+		os.Exit(1)
+	}
+
 }
 
 func response(w http.ResponseWriter, code int, payload interface{}) {
@@ -157,10 +170,9 @@ func PutSettings(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	setup()
-
 	app, err := newrelic.NewApplication(
 		newrelic.ConfigAppName("travels-control"),
-		newrelic.ConfigLicense("3aba6c1d0736939097049ccbc711e172FFFFNRAL"),
+		newrelic.ConfigLicense(nrLicenseKey),
 	)
 	_ = err
 
