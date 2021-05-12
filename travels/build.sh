@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 set -e
-
 DORP=${DORP:-docker}
-
-DOCKER_VERSION=v1
-
+DOCKER_VERSION=v1_addnr
 IMAGE_HUB=danstadlernr
+
 
 ## Travel Control
 
@@ -13,12 +11,27 @@ DOCKER_TRAVEL_CONTROL=${IMAGE_HUB}/demo_travels_control
 DOCKER_TRAVEL_CONTROL_TAG=${DOCKER_TRAVEL_CONTROL}:${DOCKER_VERSION}
 
 rm -Rf docker/travel_control/travel_control docker/travel_control/html
+rm -Rf docker/travel_control/go.mod docker/travel_control/go.sum
+rm -Rf docker/travel_control/travel_control.go docker/travel_control/types.go
+
 cd travel_control
-go build -o ../docker/travel_control/travel_control
+
+go get github.com/newrelic/go-agent
+go get github.com/newrelic/go-agent/v3/newrelic
+
+cp go.mod ../docker/travel_control
+cp go.sum ../docker/travel_control
+
+cp travel_control.go ../docker/travel_control
+cp types.go ../docker/travel_control
+
 cp -R html ../docker/travel_control
+
 cd ..
 
 ${DORP} build -t ${DOCKER_TRAVEL_CONTROL_TAG} docker/travel_control
+
+
 
 ## Travel Portal
 
@@ -26,11 +39,29 @@ DOCKER_TRAVEL_PORTAL=${IMAGE_HUB}/demo_travels_portal
 DOCKER_TRAVEL_PORTAL_TAG=${DOCKER_TRAVEL_PORTAL}:${DOCKER_VERSION}
 
 rm -Rf docker/travel_portal/travel_portal
+rm -Rf docker/travel_portal/go.mod docker/travel_portal/go.sum
+rm -Rf docker/travel_portal/travel_portal.go docker/travel_portal/types.go
+
 cd travel_portal
-go build -o ../docker/travel_portal/travel_portal
+
+go get github.com/newrelic/go-agent
+go get github.com/newrelic/go-agent/v3/newrelic
+
+cp go.mod ../docker/travel_portal
+cp go.sum ../docker/travel_portal
+
+cp travel_portal.go ../docker/travel_portal
+cp types.go ../docker/travel_portal
+
 cd ..
 
 ${DORP} build -t ${DOCKER_TRAVEL_PORTAL_TAG} docker/travel_portal
+
+
+
+
+
+## the rest are not yet converted:
 
 ## Travel LoadTester
 
@@ -118,9 +149,15 @@ cd ../..
 
 ${DORP} build -t ${DOCKER_TRAVEL_TRAVELS_TAG} docker/travel_agency/travels
 
+
+
 # ${DORP} login ${IMAGE_HUB}
+
+# converted:
 ${DORP} push ${DOCKER_TRAVEL_CONTROL_TAG}
 ${DORP} push ${DOCKER_TRAVEL_PORTAL_TAG}
+
+## the rest are not yet converted:
 ${DORP} push ${DOCKER_TRAVEL_LOADTESTER_TAG}
 ${DORP} push ${DOCKER_TRAVEL_MYSQL_TAG}
 ${DORP} push ${DOCKER_TRAVEL_CARS_TAG}
@@ -129,3 +166,4 @@ ${DORP} push ${DOCKER_TRAVEL_FLIGHTS_TAG}
 ${DORP} push ${DOCKER_TRAVEL_HOTELS_TAG}
 ${DORP} push ${DOCKER_TRAVEL_INSURANCES_TAG}
 ${DORP} push ${DOCKER_TRAVEL_TRAVELS_TAG}
+
