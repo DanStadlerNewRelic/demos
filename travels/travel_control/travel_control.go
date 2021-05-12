@@ -12,10 +12,11 @@ import (
 	"sync"
 	"bytes"
 	"sort"
+	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
 const (
-
+	// ps = "voyages.fr;http://voyages.travel-portal:8000,viaggi.it;http://viaggi.travel-portal:8000,travels.uk;http://travels.travel-portal:8000"
 )
 
 var (
@@ -156,13 +157,19 @@ func PutSettings(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	setup()
+
+	app, err := newrelic.NewApplication(
+		newrelic.ConfigAppName("travels-control"),
+		newrelic.ConfigLicense("3aba6c1d0736939097049ccbc711e172FFFFNRAL"),
+	)
+	_ = err
+
 	glog.Infof("Starting Travel Control")
 
 	router := mux.NewRouter()
 
 	// Dynamic routes
-
-	router.HandleFunc("/status", GetStatus).Methods("GET")
+	router.HandleFunc(newrelic.WrapHandleFunc(app, "/status", GetStatus)).Methods("GET")
 	router.HandleFunc("/settings/{portal}", PutSettings).Methods("PUT")
 
 	// Static routes
