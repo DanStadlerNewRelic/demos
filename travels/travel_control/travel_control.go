@@ -28,7 +28,6 @@ var (
 	portalStatus = make(map[string]PortalStatus)
 	rw sync.Mutex
 
-	// nrAppname = "travels-control"
 	nrLicenseKey = ""
 
 	errorCoordinates = []float64{-25.702539, 37.747909}

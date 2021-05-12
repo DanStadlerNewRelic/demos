@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 	mathRand "math/rand"
+	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
 const (
@@ -25,6 +26,8 @@ var (
 	portalCoordinates = []float64{-5.321187, 35.890134}
 	portalCountry     = "no-country"
 	portalName        = "no-name"
+
+	nrLicenseKey = ""
 
 	rw sync.RWMutex
 
@@ -138,6 +141,16 @@ func setup() {
 	} else {
 		glog.Warningf("TRAVELS_AGENCY_SERVICE variable empty. Using default [%s]", travelsAgencyService)
 	}
+
+	nrlk := os.Getenv("NR_LICENSE_KEY")
+	if nrlk != "" {
+		nrLicenseKey = nrlk
+		glog.Infof("New Relic License Key was provided: [%s]", nrLicenseKey)
+	} else {
+		glog.Errorf("NR_LICENSE_KEY is empty !! Travel Portal won't start")
+		os.Exit(1)
+	}
+
 }
 
 func response(w http.ResponseWriter, code int, payload interface{}) {
@@ -394,11 +407,17 @@ func PutSettings(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	setup()
+	app, err := newrelic.NewApplication(
+		newrelic.ConfigAppName("travels-portal"),
+		newrelic.ConfigLicense(nrLicenseKey),
+	)
+	_ = err
+
 	glog.Infof("Starting Travel Portal [%s]", portalName)
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/status", GetStatus).Methods("GET")
+	router.HandleFunc(newrelic.WrapHandleFunc(app, "/status", GetStatus)).Methods("GET")
 	router.HandleFunc("/settings", PutSettings).Methods("PUT")
 
 	r := mathRand.New(mathRand.NewSource(time.Now().UnixNano()))
