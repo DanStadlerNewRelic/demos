@@ -1,5 +1,5 @@
 # FROM centos:centos7
-FROM golang:latest
+FROM golang:latest as builder
 
 LABEL maintainer="ponce.ballesteros@gmail.com"
 
@@ -16,6 +16,8 @@ COPY travel_portal.go $TRAVEL_HOME/
 COPY types.go $TRAVEL_HOME/
 RUN go build -o /opt/travel_portal/travel_portal
 
-# COPY travel_portal $TRAVEL_HOME/
 
+# final stage:
+FROM centos:centos7
+COPY --from=builder /opt/travel_portal/travel_portal /opt/travel_portal/travel_portal
 ENTRYPOINT ["/opt/travel_portal/travel_portal"]
