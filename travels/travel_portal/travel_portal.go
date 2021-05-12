@@ -27,6 +27,7 @@ var (
 	portalCountry     = "no-country"
 	portalName        = "no-name"
 
+	nrAppName = ""
 	nrLicenseKey = ""
 
 	rw sync.RWMutex
@@ -140,6 +141,15 @@ func setup() {
 		glog.Infof("TRAVELS_AGENCY_SERVICE=%s", travelsAgencyService)
 	} else {
 		glog.Warningf("TRAVELS_AGENCY_SERVICE variable empty. Using default [%s]", travelsAgencyService)
+	}
+
+	nran := os.Getenv("NR_APP_NAME")
+	if nran != "" {
+		nrAppName = nran
+		glog.Infof("New Relic App Name was provided: [%s]", nrAppName)
+	} else {
+		glog.Errorf("NR_APP_NAME is empty !! Travel Portal won't start")
+		os.Exit(1)
 	}
 
 	nrlk := os.Getenv("NR_LICENSE_KEY")
@@ -408,7 +418,7 @@ func PutSettings(w http.ResponseWriter, r *http.Request) {
 func main() {
 	setup()
 	app, err := newrelic.NewApplication(
-		newrelic.ConfigAppName("travels-portal"),
+		newrelic.ConfigAppName(nrAppName),
 		newrelic.ConfigLicense(nrLicenseKey),
 	)
 	_ = err

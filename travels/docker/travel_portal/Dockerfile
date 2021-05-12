@@ -1,4 +1,3 @@
-# FROM centos:centos7
 FROM golang:latest as builder
 
 LABEL maintainer="ponce.ballesteros@gmail.com"

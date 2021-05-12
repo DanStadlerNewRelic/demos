@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	// ps = "voyages.fr;http://voyages.travel-portal:8000,viaggi.it;http://viaggi.travel-portal:8000,travels.uk;http://travels.travel-portal:8000"
+
 )
 
 var (
@@ -28,6 +28,7 @@ var (
 	portalStatus = make(map[string]PortalStatus)
 	rw sync.Mutex
 
+	nrAppName = ""
 	nrLicenseKey = ""
 
 	errorCoordinates = []float64{-25.702539, 37.747909}
@@ -60,6 +61,15 @@ func setup() {
 	if wr != "" {
 		webroot = wr
 		glog.Infof("WEBROOT=%s", webroot)
+	}
+
+	nran := os.Getenv("NR_APP_NAME")
+	if nran != "" {
+		nrAppName = nran
+		glog.Infof("New Relic App Name was provided: [%s]", nrAppName)
+	} else {
+		glog.Errorf("NR_APP_NAME is empty !! Travel Control won't start")
+		os.Exit(1)
 	}
 
 	nrlk := os.Getenv("NR_LICENSE_KEY")
@@ -170,7 +180,7 @@ func PutSettings(w http.ResponseWriter, r *http.Request) {
 func main() {
 	setup()
 	app, err := newrelic.NewApplication(
-		newrelic.ConfigAppName("travels-control"),
+		newrelic.ConfigAppName(nrAppName),
 		newrelic.ConfigLicense(nrLicenseKey),
 	)
 	_ = err
