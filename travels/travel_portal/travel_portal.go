@@ -420,6 +420,7 @@ func main() {
 	app, err := newrelic.NewApplication(
 		newrelic.ConfigAppName(nrAppName),
 		newrelic.ConfigLicense(nrLicenseKey),
+		newrelic.ConfigDistributedTracerEnabled(true),
 	)
 	_ = err
 
@@ -428,7 +429,7 @@ func main() {
 	router := mux.NewRouter()
 
 	router.HandleFunc(newrelic.WrapHandleFunc(app, "/status", GetStatus)).Methods("GET")
-	router.HandleFunc("/settings", PutSettings).Methods("PUT")
+	router.HandleFunc(newrelic.WrapHandleFunc(app, "/settings", PutSettings)).Methods("PUT")
 
 	r := mathRand.New(mathRand.NewSource(time.Now().UnixNano()))
 

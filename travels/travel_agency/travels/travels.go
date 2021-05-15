@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
 type City struct {
@@ -65,6 +66,10 @@ var (
 	chaosMonkeySleep = 500 * time.Millisecond // Milliseconds to wait if chaosMonkey is enabled
 	chaosMonkeyCity = ""
 	chaosMonkeyUser = ""
+
+	nrAppName = ""
+	nrLicenseKey = ""
+
 )
 
 func setup() {
@@ -114,6 +119,25 @@ func setup() {
 		chaosMonkeyCity = os.Getenv("CHAOS_MONKEY_CITY")
 		chaosMonkeyUser = os.Getenv("CHAOS_MONKEY_USER")
 	}
+
+	nran := os.Getenv("NR_APP_NAME")
+	if nran != "" {
+		nrAppName = nran
+		glog.Infof("New Relic App Name was provided: [%s]", nrAppName)
+	} else {
+		glog.Errorf("NR_APP_NAME is empty !! Travel Control won't start")
+		os.Exit(1)
+	}
+
+	nrlk := os.Getenv("NR_LICENSE_KEY")
+	if nrlk != "" {
+		nrLicenseKey = nrlk
+		glog.Infof("New Relic License Key was provided: [%s]", nrLicenseKey)
+	} else {
+		glog.Errorf("NR_LICENSE_KEY is empty !! Travel Control won't start")
+		os.Exit(1)
+	}
+
 }
 
 func Error(w http.ResponseWriter, notFound bool, msg string) {
@@ -304,10 +328,17 @@ func propagateHeaders(a *http.Request, b *http.Request) {
 
 func main() {
 	setup()
+	app, err := newrelic.NewApplication(
+		newrelic.ConfigAppName(nrAppName),
+		newrelic.ConfigLicense(nrLicenseKey),
+		newrelic.ConfigDistributedTracerEnabled(true),
+	)
+	_ = err
+
 	glog.Infof("Starting %s \n", instance)
 	router := mux.NewRouter()
-	router.HandleFunc("/travels", GetDestinations).Methods("GET")
-	router.HandleFunc("/travels/{city}", GetTravelQuote).Methods("GET")
+	router.HandleFunc(newrelic.WrapHandleFunc(app, "/travels", GetDestinations)).Methods("GET")
+	router.HandleFunc(newrelic.WrapHandleFunc(app, "/travels/{city}", GetTravelQuote)).Methods("GET")
 	glog.Fatal(http.ListenAndServe(listenAddress, router))
 }
 

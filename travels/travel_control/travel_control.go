@@ -182,6 +182,7 @@ func main() {
 	app, err := newrelic.NewApplication(
 		newrelic.ConfigAppName(nrAppName),
 		newrelic.ConfigLicense(nrLicenseKey),
+		newrelic.ConfigDistributedTracerEnabled(true),
 	)
 	_ = err
 
@@ -191,7 +192,7 @@ func main() {
 
 	// Dynamic routes
 	router.HandleFunc(newrelic.WrapHandleFunc(app, "/status", GetStatus)).Methods("GET")
-	router.HandleFunc("/settings/{portal}", PutSettings).Methods("PUT")
+	router.HandleFunc(newrelic.WrapHandleFunc(app, "/settings/{portal}", PutSettings)).Methods("PUT")
 
 	// Static routes
 
