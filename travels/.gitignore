@@ -3,3 +3,5 @@ docker/travel_portal
 docker/travel_agency
 travel_control/travel_control
 build-one.sh
+build-control.sh
+build-portal.sh
