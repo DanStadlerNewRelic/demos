@@ -159,6 +159,15 @@ func Error(w http.ResponseWriter, notFound bool, msg string) {
 }
 
 func GetDestinations(w http.ResponseWriter, r *http.Request) {
+
+	// DT testing - dump all headers into the log
+	for name, values := range r.Header {
+		// Loop over all values for the name.
+		for _, value := range values {
+			glog.Infof("Travels: GetDestinations: header: name: %s , value %s\n", name, value)
+		}
+	}
+
 	portal := r.Header.Get("portal")
 	device := r.Header.Get("device")
 	user := r.Header.Get("user")
@@ -166,10 +175,17 @@ func GetDestinations(w http.ResponseWriter, r *http.Request) {
 
 	glog.Infof("[%s] GetDestinations from [%s]. Device [%s]. User [%s]. Travel [%s] \n", instance, portal, device, user, travel)
 
+	txn := newrelic.FromContext(r.Context())
+
 	request, _ := http.NewRequest("GET", hotelsService + "/hotels", nil)
 	propagateHeaders(r, request)
 	client := &http.Client{}
+
+	s := newrelic.StartExternalSegment(txn, request)
 	response, err := client.Do(request)
+	s.Response = response
+	s.End()
+
 	if err != nil {
 		Error(w, false, "Error fetching destinations for portal [" + portal + "]")
 		return
@@ -182,6 +198,15 @@ func GetDestinations(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTravelQuote(w http.ResponseWriter, r *http.Request) {
+
+	// DT testing - dump all headers into the log
+	for name, values := range r.Header {
+		// Loop over all values for the name.
+		for _, value := range values {
+			glog.Infof("Travels: GetTravelQuote: header: name: %s , value %s\n", name, value)
+		}
+	}
+
 	params := mux.Vars(r)
 	portal := r.Header.Get("portal")
 	device := r.Header.Get("device")
@@ -190,7 +215,6 @@ func GetTravelQuote(w http.ResponseWriter, r *http.Request) {
 	city := params["city"]
 
 	glog.Infof("[%s] GetTravelQuote from [%s]. Device [%s]. User [%s]. Travel [%s] for [city: %s].\n", instance, portal, device, user, travel, city)
-
 	travelQuote := TravelQuote{
 		City: city,
 		CreatedAt: time.Now().Format(time.RFC3339),
@@ -209,13 +233,18 @@ func GetTravelQuote(w http.ResponseWriter, r *http.Request) {
 	wg.Add(4)
 	errChan := make(chan error, 4)
 
+	txn := newrelic.FromContext(r.Context())
+
 	go func() {
 		defer wg.Done()
 		if travel == "t1" || travel == "t2" {
 			request, _ := http.NewRequest("GET", flightsService + "/flights/" + city, nil)
 			propagateHeaders(r, request)
 			client := &http.Client{}
+			s := newrelic.StartExternalSegment(txn, request)
 			response, err := client.Do(request)
+			s.Response = response
+			s.End()
 			if err != nil {
 				errChan <- err
 				return
@@ -234,7 +263,10 @@ func GetTravelQuote(w http.ResponseWriter, r *http.Request) {
 		propagateHeaders(r, request)
 
 		client := &http.Client{}
+		s := newrelic.StartExternalSegment(txn, request)
 		response, err := client.Do(request)
+		s.Response = response
+		s.End()
 		if err != nil {
 			errChan <- err
 			return
@@ -253,7 +285,10 @@ func GetTravelQuote(w http.ResponseWriter, r *http.Request) {
 			propagateHeaders(r, request)
 
 			client := &http.Client{}
+			s := newrelic.StartExternalSegment(txn, request)
 			response, err := client.Do(request)
+			s.Response = response
+			s.End()
 			if err != nil {
 				errChan <- err
 				return
@@ -272,7 +307,10 @@ func GetTravelQuote(w http.ResponseWriter, r *http.Request) {
 		propagateHeaders(r, request)
 
 		client := &http.Client{}
+		s := newrelic.StartExternalSegment(txn, request)
 		response, err := client.Do(request)
+		s.Response = response
+		s.End()
 		if err != nil {
 			errChan <- err
 			return
@@ -313,13 +351,6 @@ func propagateHeaders(a *http.Request, b *http.Request) {
 		"device",
 		"user",
 		"travel",
-		"x-request-id",
-		"x-b3-traceid",
-		"x-b3-spanid",
-		"x-b3-parentspanid",
-		"x-b3-sampled",
-		"x-b3-flags",
-		"x-ot-span-context",
 	}
 	for _, header := range headers {
 		b.Header.Add(header, a.Header.Get(header))

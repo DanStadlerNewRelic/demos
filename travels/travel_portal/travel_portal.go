@@ -377,6 +377,7 @@ func updateCityRequest(city string, coordinates []float64, device string, user s
 }
 
 func GetStatus(w http.ResponseWriter, _ *http.Request) {
+
 	defer rw.RUnlock()
 	glog.Infof("Sent Status for [%s]\n", portalName)
 
@@ -438,6 +439,8 @@ func main() {
 		for {
 			device, user, travel := calculateRequestType()
 
+			txn := app.StartTransaction("portalMainLoop")
+
 			request, _ := http.NewRequest("GET", travelsAgencyService + "/travels", nil)
 			request.Header.Set("portal", portalName)
 			request.Header.Set("device", device)
@@ -445,7 +448,14 @@ func main() {
 			request.Header.Set("travel", travel)
 
 			client := &http.Client{}
+
+			// from: https://github.com/newrelic/go-agent/blob/master/GUIDE.md#segments
+			// using method 1:
+			s := newrelic.StartExternalSegment(txn, request)
 			response, err := client.Do(request)
+			s.Response = response
+			s.End()
+
 			if err != nil {
 				glog.Errorf("Error requesting Destinations from [%s] - Device [%s] User [%s] Travel Type [%s] - Error: %s", portalName, device, user, travel, err.Error())
 			}
@@ -466,7 +476,12 @@ func main() {
 				request.Header.Set("travel", travel)
 
 				client := &http.Client{}
+				s := newrelic.StartExternalSegment(txn, request)
 				response, err := client.Do(request)
+				s.Response = response
+				s.End()
+
+
 				if err != nil {
 					glog.Errorf("Error requesting Travel Quote from [%s] - Device [%s] User [%s] Travel Type [%s] City [%s] - Error: %s", portalName, device, user, travel, city, err.Error())
 				}
@@ -483,6 +498,8 @@ func main() {
 				glog.Warningf("Receiving empty Destinations from [%s] - Device [%s] User [%s] Travel Type [%s]", portalName, device, user, travel)
 			}
 
+			txn.End()
+
 			requestSleep := time.Duration(int(MAX_REQUEST_WAIT - (MAX_REQUEST_WAIT * float32(float32(settings.RequestRatio)/float32(100))))) * time.Millisecond
 
 			// Protection against very fast requests ratios
@@ -492,6 +509,7 @@ func main() {
 
 			glog.Infof("Sleep [%2.3f] s", requestSleep.Seconds())
 			time.Sleep(requestSleep)
+
 		}
 	}()
 

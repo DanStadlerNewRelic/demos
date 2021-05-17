@@ -210,8 +210,13 @@ func applyDiscounts(r *http.Request, travelInfo *TravelInfo, discountFrom string
 	propagateHeaders(r, request)
 	request.Header.Set("discountFrom", discountFrom)
 
+	txn := newrelic.FromContext(r.Context())
 	client := &http.Client{}
+	s := newrelic.StartExternalSegment(txn, request)
 	response, err := client.Do(request)
+	s.Response = response
+	s.End()
+
 	if err != nil {
 		glog.Errorf("No discount. Discount service is not available")
 		return *travelInfo
@@ -246,13 +251,6 @@ func propagateHeaders(a *http.Request, b *http.Request) {
 		"device",
 		"user",
 		"travel",
-		"x-request-id",
-		"x-b3-traceid",
-		"x-b3-spanid",
-		"x-b3-parentspanid",
-		"x-b3-sampled",
-		"x-b3-flags",
-		"x-ot-span-context",
 	}
 	for _, header := range headers {
 		b.Header.Add(header, a.Header.Get(header))

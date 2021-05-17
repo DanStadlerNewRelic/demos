@@ -31,6 +31,7 @@ cd ..
 
 ${DORP} build -t ${DOCKER_TRAVEL_CONTROL_TAG} docker/travel_control
 
+#${DORP} push ${DOCKER_TRAVEL_CONTROL_TAG}
 
 
 ## Travel Portal
@@ -57,7 +58,7 @@ cd ..
 
 ${DORP} build -t ${DOCKER_TRAVEL_PORTAL_TAG} docker/travel_portal
 
-
+# ${DORP} push ${DOCKER_TRAVEL_PORTAL_TAG}
 
 
 
@@ -102,6 +103,8 @@ cd ../..
 
 ${DORP} build -t ${DOCKER_TRAVEL_CARS_TAG} docker/travel_agency/cars
 
+# ${DORP} push ${DOCKER_TRAVEL_CARS_TAG}
+
 
 ## Discounts
 
@@ -125,6 +128,9 @@ cd ../..
 
 ${DORP} build -t ${DOCKER_TRAVEL_DISCOUNTS_TAG} docker/travel_agency/discounts
 
+# ${DORP} push ${DOCKER_TRAVEL_DISCOUNTS_TAG}
+
+
 ## Flights
 
 DOCKER_TRAVEL_FLIGHTS=${IMAGE_HUB}/demo_travels_flights
@@ -145,6 +151,9 @@ cp flights.go ../../docker/travel_agency/flights
 cd ../..
 
 ${DORP} build -t ${DOCKER_TRAVEL_FLIGHTS_TAG} docker/travel_agency/flights
+
+# ${DORP} push ${DOCKER_TRAVEL_FLIGHTS_TAG}
+
 
 ## Hotels
 
@@ -167,6 +176,9 @@ cd ../..
 
 ${DORP} build -t ${DOCKER_TRAVEL_HOTELS_TAG} docker/travel_agency/hotels
 
+# ${DORP} push ${DOCKER_TRAVEL_HOTELS_TAG}
+
+
 ## Insurances
 
 DOCKER_TRAVEL_INSURANCES=${IMAGE_HUB}/demo_travels_insurances
@@ -188,6 +200,10 @@ cd ../..
 
 ${DORP} build -t ${DOCKER_TRAVEL_INSURANCES_TAG} docker/travel_agency/insurances
 
+# ${DORP} push ${DOCKER_TRAVEL_INSURANCES_TAG}
+
+
+
 ## Travels
 
 DOCKER_TRAVEL_TRAVELS=${IMAGE_HUB}/demo_travels_travels
@@ -208,6 +224,8 @@ cp travels.go ../../docker/travel_agency/travels
 cd ../..
 
 ${DORP} build -t ${DOCKER_TRAVEL_TRAVELS_TAG} docker/travel_agency/travels
+
+# ${DORP} push ${DOCKER_TRAVEL_TRAVELS_TAG}
 
 
 

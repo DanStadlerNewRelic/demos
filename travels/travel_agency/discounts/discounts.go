@@ -87,6 +87,11 @@ func setup() {
 }
 
 func GetDiscounts(w http.ResponseWriter, r *http.Request) {
+
+	txn := newrelic.FromContext(r.Context())
+	s := txn.StartSegment("getDiscounts")
+	defer s.End()
+
 	portal := r.Header.Get("portal")
 	device := r.Header.Get("device")
 	params := mux.Vars(r)

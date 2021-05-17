@@ -533,6 +533,7 @@ const getCities = (portals) => {
     return cities;
 };
 
+
 const getPortalsStatus = () => {
     return fetch('status')
         .then(resp => {

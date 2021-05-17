@@ -99,6 +99,7 @@ func GetStatus(w http.ResponseWriter, _ *http.Request) {
 	var wg sync.WaitGroup
 	wg.Add(len(portalServices))
 
+
 	for portalName, portalAddress := range portalServices {
 		go func(name, address string) {
 			defer wg.Done()
